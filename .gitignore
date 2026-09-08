@@ -1,0 +1,52 @@
+# ===== Java / Gradle =====
+.gradle/
+**/build/
+!src/**/build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+.gradletasknamecache
+*.class
+*.log
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+hs_err_pid*
+
+# ===== Spring =====
+application-secret.yml
+*.pid
+
+# ===== Node / Frontend =====
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+coverage/
+.eslintcache
+
+# ===== Env =====
+.env
+.env.*
+!.env.example
+
+# ===== IDE =====
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+!.vscode/extensions.json
+.settings/
+.project
+.classpath
+*.swp
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== k6 =====
+loadtest/results/*.json
+loadtest/results/*.csv
+!loadtest/results/.gitkeep
