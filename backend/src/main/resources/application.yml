@@ -1,0 +1,21 @@
+spring:
+  profiles:
+    default: local
+  application:
+    name: burger-coupon-rush
+
+server:
+  port: ${SERVER_PORT:8080}
+
+# JWT 서명 키/만료. 운영에서는 반드시 환경변수로 주입할 것.
+jwt:
+  secret: ${JWT_SECRET:burger-coupon-rush-dev-secret-key-please-change-in-production-0123456789abcdef}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24h
+
+# 쿠폰 발급 전략: naive | pessimistic | redis (Step 3~5에서 사용)
+coupon:
+  issue-strategy: ${COUPON_ISSUE_STRATEGY:pessimistic}
+
+logging:
+  level:
+    com.d5wq.burger: INFO
