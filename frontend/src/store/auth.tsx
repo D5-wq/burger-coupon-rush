@@ -9,6 +9,8 @@ import {
 } from 'react';
 import { authApi } from '../api/auth';
 import { tokenStore } from '../api/client';
+import { mockApi } from '../api/mock';
+import { IS_DEMO } from '../lib/env';
 import { UserResponse } from '../types';
 
 interface AuthContextValue {
@@ -57,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     tokenStore.clear();
+    if (IS_DEMO) mockApi.logout();
     setUser(null);
   }, []);
 
