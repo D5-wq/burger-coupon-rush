@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-[#FAFAF8] text-ink font-sans antialiased;
+  }
+}
+
+@layer components {
+  /* 카드 공통 */
+  .card {
+    @apply rounded-xl2 bg-white shadow-card transition-shadow;
+  }
+  .card:hover {
+    @apply shadow-card-hover;
+  }
+
+  /* 입력 필드 공통 */
+  .input {
+    @apply w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-[15px]
+      outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20
+      placeholder:text-ink-faint;
+  }
+}
