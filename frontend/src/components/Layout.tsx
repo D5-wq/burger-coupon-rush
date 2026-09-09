@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
 import { cn } from '../lib/cn';
+import { IS_DEMO } from '../lib/env';
 
 export default function Layout() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -20,6 +21,11 @@ export default function Layout() {
             <span>
               Burger<span className="text-brand">Rush</span>
             </span>
+            {IS_DEMO && (
+              <span className="ml-1 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-bold text-brand-600">
+                DEMO
+              </span>
+            )}
           </Link>
 
           <nav className="flex items-center gap-1 text-sm font-semibold">
