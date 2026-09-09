@@ -41,7 +41,7 @@ dependencies {
 
     // DB drivers
     runtimeOnly 'com.mysql:mysql-connector-j'
-    runtimeOnly 'com.h2database:h2' // for tests
+    runtimeOnly 'com.h2database:h2' // demo 프로필(인프라 없이 실행) + 테스트용
 
     // Lombok
     compileOnly 'org.projectlombok:lombok'
