@@ -8,4 +8,6 @@ public interface CouponIssueRepository extends JpaRepository<CouponIssue, Long> 
     boolean existsByCouponIdAndUserId(Long couponId, Long userId);
 
     long countByCouponId(Long couponId);
+
+    void deleteByCouponId(Long couponId);
 }

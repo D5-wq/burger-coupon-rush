@@ -88,4 +88,9 @@ public class Coupon extends BaseTimeEntity {
     public int issuedQuantity() {
         return totalQuantity - stock;
     }
+
+    /** 재고를 총 수량으로 되돌린다. (부하테스트/버그 재현 반복용) */
+    public void resetStock() {
+        this.stock = totalQuantity;
+    }
 }
