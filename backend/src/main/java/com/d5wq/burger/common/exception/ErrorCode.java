@@ -27,6 +27,12 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_404", "주문을 찾을 수 없습니다."),
     EMPTY_ORDER(HttpStatus.BAD_REQUEST, "ORDER_400", "주문 항목이 비어 있습니다."),
 
+    // order option
+    INVALID_OPTION(HttpStatus.BAD_REQUEST, "OPTION_400", "해당 상품에서 선택할 수 없는 옵션입니다."),
+    OPTION_QUANTITY_EXCEEDED(HttpStatus.BAD_REQUEST, "OPTION_400_QTY", "옵션 수량이 허용 범위를 벗어났습니다."),
+    REQUIRED_OPTION_MISSING(HttpStatus.BAD_REQUEST, "OPTION_400_REQUIRED", "필수 옵션을 선택해야 합니다."),
+    OPTION_SELECTION_INVALID(HttpStatus.BAD_REQUEST, "OPTION_400_COUNT", "옵션 선택 개수가 올바르지 않습니다."),
+
     // coupon (Step 3~5)
     COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "COUPON_404", "쿠폰을 찾을 수 없습니다."),
     COUPON_SOLD_OUT(HttpStatus.CONFLICT, "COUPON_409_SOLD_OUT", "쿠폰이 모두 소진되었습니다."),
