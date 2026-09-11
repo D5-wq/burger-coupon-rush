@@ -31,6 +31,7 @@
 | 도메인 설계 | 쿠폰↔상품 연결(버거별 할인율), 유니크 제약으로 1인 1장 보장 |
 | JPA/트랜잭션 | 영속성 컨텍스트·변경 감지·`PESSIMISTIC_WRITE` 락 이해와 적용 |
 | 예외/응답 표준화 | `ErrorCode`+`BusinessException`+전역 핸들러, 공통 `ApiResponse` |
+| API 문서화 | **Swagger/OpenAPI**(springdoc) 자동 생성 + JWT 인증 스킴 |
 | 인프라 | Docker Compose(MySQL/Redis), 프로필 분리, 인프라 없는 demo(H2) 실행 |
 | (예정) | Redis 분산락 · k6 부하테스트 · CI/CD(GitHub Actions) |
 
@@ -74,7 +75,8 @@ cd backend && ./gradlew test
 cd frontend && npm install && npm run dev
 ```
 
-프론트 데모(mock): **https://burger-coupon-rush.vercel.app/**
+- **API 명세서(Swagger)**: 백엔드 실행 후 → `http://localhost:8080/swagger-ui.html`
+- 프론트 데모(mock): **https://burger-coupon-rush.vercel.app/**
 
 ## 📚 문서
 

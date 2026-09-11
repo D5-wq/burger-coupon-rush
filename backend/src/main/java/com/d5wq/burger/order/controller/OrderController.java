@@ -5,6 +5,7 @@ import com.d5wq.burger.order.dto.OrderCreateRequest;
 import com.d5wq.burger.order.dto.OrderResponse;
 import com.d5wq.burger.order.service.OrderService;
 import com.d5wq.burger.security.LoginUser;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Order", description = "주문 생성 / 내 주문 조회")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/orders")

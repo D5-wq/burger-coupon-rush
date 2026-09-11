@@ -10,6 +10,7 @@ import com.d5wq.burger.coupon.dto.MyCouponResponse;
 import com.d5wq.burger.coupon.service.CouponIssueService;
 import com.d5wq.burger.coupon.service.IssueStrategy;
 import com.d5wq.burger.security.LoginUser;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Coupon", description = "선착순 쿠폰 발급/목록/쿠폰함 (동시성 제어 핵심)")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/coupons")
