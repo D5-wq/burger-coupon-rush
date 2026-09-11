@@ -36,6 +36,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/coupons").permitAll()
                         .requestMatchers("/api/coupons/*/status").permitAll()
                         .requestMatchers("/actuator/health", "/error").permitAll()
+                        // API 문서(Swagger/OpenAPI)
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         // 그 외는 인증 필요
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
