@@ -1,6 +1,7 @@
 package com.d5wq.burger.product.controller;
 
 import com.d5wq.burger.common.response.ApiResponse;
+import com.d5wq.burger.product.dto.ProductDetailResponse;
 import com.d5wq.burger.product.dto.ProductResponse;
 import com.d5wq.burger.product.service.ProductService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +26,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<ProductResponse> getProduct(@PathVariable Long id) {
+    public ApiResponse<ProductDetailResponse> getProduct(@PathVariable Long id) {
         return ApiResponse.success(productService.getProduct(id));
     }
 }
