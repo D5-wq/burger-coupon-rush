@@ -53,9 +53,11 @@ burger-coupon-rush/
 └── docker-compose.yml
 ```
 
-## 개발 컨벤션
+## 문서
 
-브랜치 전략과 커밋/PR 규칙은 [CONTRIBUTING.md](./CONTRIBUTING.md) 참고.
+- 📐 [아키텍처 & 프로젝트 총정리](./docs/ARCHITECTURE.md) — 시스템 구조 · ERD · 동시성 제어 · API · 개발 이력
+- 🚀 [배포 가이드](./docs/DEPLOY.md)
+- 🤝 [기여/개발 컨벤션](./CONTRIBUTING.md) — 브랜치 전략, 커밋/PR 규칙
 
 ## License
 
