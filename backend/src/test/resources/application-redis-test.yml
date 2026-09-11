@@ -1,0 +1,28 @@
+# Redis 발급 전략(Step 5) 동시성 검증용 테스트 프로필.
+# H2(DB)는 그대로 쓰되, test 프로필과 달리 Redisson 자동설정을 제외하지 않아 실제 Redis 에 연결한다.
+# Redis 포트는 테스트에서 임시로 띄운 redis-server 포트로 @DynamicPropertySource 가 덮어쓴다.
+spring:
+  datasource:
+    url: jdbc:h2:mem:burger;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    open-in-view: false
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+jwt:
+  secret: test-secret-key-for-hs256-jwt-signing-0123456789abcdefghijklmnop
+  expiration-ms: 3600000
+
+coupon:
+  redis-enabled: true
+  issue-strategy: redis

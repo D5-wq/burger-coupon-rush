@@ -19,3 +19,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+
+# local 프로필은 인프라(MySQL+Redis)가 함께 뜨므로 Redis 발급 전략을 활성화한다.
+coupon:
+  redis-enabled: true
