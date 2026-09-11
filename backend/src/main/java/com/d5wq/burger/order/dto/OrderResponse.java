@@ -2,6 +2,7 @@ package com.d5wq.burger.order.dto;
 
 import com.d5wq.burger.order.entity.Order;
 import com.d5wq.burger.order.entity.OrderItem;
+import com.d5wq.burger.order.entity.OrderItemOption;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,15 +20,31 @@ public record OrderResponse(
             String productName,
             int unitPrice,
             int quantity,
-            int lineTotal) {
+            int lineTotal,
+            List<Option> options) {
 
         static Item from(OrderItem oi) {
+            List<Option> options = oi.getOptions().stream()
+                    .map(Option::from)
+                    .toList();
             return new Item(
                     oi.getProduct().getId(),
                     oi.getProduct().getName(),
                     oi.getUnitPrice(),
                     oi.getQuantity(),
-                    oi.lineTotal());
+                    oi.lineTotal(),
+                    options);
+        }
+    }
+
+    public record Option(
+            String groupName,
+            String itemName,
+            int extraPrice,
+            int quantity) {
+
+        static Option from(OrderItemOption o) {
+            return new Option(o.getGroupName(), o.getItemName(), o.getExtraPrice(), o.getQuantity());
         }
     }
 
