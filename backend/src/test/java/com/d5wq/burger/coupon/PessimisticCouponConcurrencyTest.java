@@ -35,7 +35,7 @@ class PessimisticCouponConcurrencyTest {
     @DisplayName("비관적 락: 재고 100 + 동시 1000요청 → 정확히 100장만 발급, 초과 0")
     void pessimistic_noOverIssue_underConcurrency() throws InterruptedException {
         Long couponId = couponIssueService.createCoupon(
-                new CouponCreateRequest("동시성 테스트 쿠폰(락)", 20, STOCK, null, null));
+                new CouponCreateRequest("동시성 테스트 쿠폰(락)", 20, null, null, STOCK, null, null));
 
         ExecutorService pool = Executors.newFixedThreadPool(THREADS);
         CountDownLatch startGate = new CountDownLatch(1);

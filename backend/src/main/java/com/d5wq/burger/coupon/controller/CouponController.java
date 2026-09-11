@@ -5,10 +5,13 @@ import com.d5wq.burger.common.exception.ErrorCode;
 import com.d5wq.burger.common.response.ApiResponse;
 import com.d5wq.burger.coupon.dto.CouponCreateRequest;
 import com.d5wq.burger.coupon.dto.CouponStatusResponse;
+import com.d5wq.burger.coupon.dto.CouponSummaryResponse;
+import com.d5wq.burger.coupon.dto.MyCouponResponse;
 import com.d5wq.burger.coupon.service.CouponIssueService;
 import com.d5wq.burger.coupon.service.IssueStrategy;
 import com.d5wq.burger.security.LoginUser;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +30,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class CouponController {
 
     private final CouponIssueService couponIssueService;
+
+    /** 발급 가능한 쿠폰 목록. 인증 불필요. */
+    @GetMapping
+    public ApiResponse<List<CouponSummaryResponse>> list() {
+        return ApiResponse.success(couponIssueService.getIssuableCoupons());
+    }
+
+    /** 내 쿠폰함. */
+    @GetMapping("/me")
+    public ApiResponse<List<MyCouponResponse>> myCoupons(@LoginUser Long userId) {
+        return ApiResponse.success(couponIssueService.getMyCoupons(userId));
+    }
 
     /** 선착순 쿠폰 발급. strategy 로 동시성 제어 방식을 선택(naive/pessimistic/redis). */
     @PostMapping("/{couponId}/issue")
