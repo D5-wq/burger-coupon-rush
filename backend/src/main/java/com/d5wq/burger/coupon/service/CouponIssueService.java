@@ -134,5 +134,11 @@ public class CouponIssueService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
         couponIssueRepository.deleteByCouponId(couponId);
         coupon.resetStock();
+
+        // Redis 전략이 활성화돼 있으면 재고 카운터/발급 집합도 함께 초기화한다.
+        CouponIssuer redisIssuer = issuers.get(IssueStrategy.REDIS);
+        if (redisIssuer instanceof RedisCouponIssuer r) {
+            r.resetCache(couponId, coupon.getStock());
+        }
     }
 }
