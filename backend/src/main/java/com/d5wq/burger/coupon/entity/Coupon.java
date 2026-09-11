@@ -3,6 +3,8 @@ package com.d5wq.burger.coupon.entity;
 import com.d5wq.burger.common.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -30,6 +32,15 @@ public class Coupon extends BaseTimeEntity {
     @Column(nullable = false)
     private int discountRate;
 
+    /** 적용 범위: 전체 주문(ORDER) or 특정 상품(PRODUCT). */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ApplyScope applyScope;
+
+    /** PRODUCT 범위일 때 대상 상품 id. ORDER면 null. */
+    @Column
+    private Long productId;
+
     /** 총 발급 수량(고정). */
     @Column(nullable = false)
     private int totalQuantity;
@@ -46,25 +57,41 @@ public class Coupon extends BaseTimeEntity {
     private LocalDateTime endAt;
 
     @Builder
-    private Coupon(String name, int discountRate, int totalQuantity,
-            LocalDateTime startAt, LocalDateTime endAt) {
+    private Coupon(String name, int discountRate, ApplyScope applyScope, Long productId,
+            int totalQuantity, LocalDateTime startAt, LocalDateTime endAt) {
         this.name = name;
         this.discountRate = discountRate;
+        this.applyScope = applyScope;
+        this.productId = productId;
         this.totalQuantity = totalQuantity;
         this.stock = totalQuantity; // 시작 재고 = 총 수량
         this.startAt = startAt;
         this.endAt = endAt;
     }
 
-    public static Coupon create(String name, int discountRate, int totalQuantity,
+    /** 전체 주문에 적용되는 쿠폰. */
+    public static Coupon forOrder(String name, int discountRate, int totalQuantity,
             LocalDateTime startAt, LocalDateTime endAt) {
         return Coupon.builder()
-                .name(name)
-                .discountRate(discountRate)
-                .totalQuantity(totalQuantity)
-                .startAt(startAt)
-                .endAt(endAt)
+                .name(name).discountRate(discountRate)
+                .applyScope(ApplyScope.ORDER).productId(null)
+                .totalQuantity(totalQuantity).startAt(startAt).endAt(endAt)
                 .build();
+    }
+
+    /** 특정 상품(버거)에만 적용되는 쿠폰. */
+    public static Coupon forProduct(String name, int discountRate, Long productId,
+            int totalQuantity, LocalDateTime startAt, LocalDateTime endAt) {
+        return Coupon.builder()
+                .name(name).discountRate(discountRate)
+                .applyScope(ApplyScope.PRODUCT).productId(productId)
+                .totalQuantity(totalQuantity).startAt(startAt).endAt(endAt)
+                .build();
+    }
+
+    /** 주어진 금액에 이 쿠폰의 할인율을 적용한 할인액(원 단위 내림). */
+    public int discountAmountFor(int amount) {
+        return amount * discountRate / 100;
     }
 
     /** 지금이 발급 가능한 기간인지. */

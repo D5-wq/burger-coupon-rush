@@ -38,7 +38,7 @@ class NaiveCouponConcurrencyTest {
     void naive_overIssues_underConcurrency() throws InterruptedException {
         // given: 재고 100짜리 쿠폰
         Long couponId = couponIssueService.createCoupon(
-                new CouponCreateRequest("동시성 테스트 쿠폰", 20, STOCK, null, null));
+                new CouponCreateRequest("동시성 테스트 쿠폰", 20, null, null, STOCK, null, null));
 
         ExecutorService pool = Executors.newFixedThreadPool(THREADS);
         CountDownLatch startGate = new CountDownLatch(1);   // 모든 스레드를 동시에 출발시키는 신호

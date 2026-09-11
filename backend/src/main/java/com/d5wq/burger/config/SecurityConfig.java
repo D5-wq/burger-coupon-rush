@@ -33,6 +33,7 @@ public class SecurityConfig {
                         // 인증 없이 허용
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/coupons").permitAll()
                         .requestMatchers("/api/coupons/*/status").permitAll()
                         .requestMatchers("/actuator/health", "/error").permitAll()
                         // 그 외는 인증 필요
