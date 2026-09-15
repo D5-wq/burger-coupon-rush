@@ -2,6 +2,11 @@ package com.d5wq.burger.order.service;
 
 import com.d5wq.burger.common.exception.BusinessException;
 import com.d5wq.burger.common.exception.ErrorCode;
+import com.d5wq.burger.coupon.entity.ApplyScope;
+import com.d5wq.burger.coupon.entity.Coupon;
+import com.d5wq.burger.coupon.entity.CouponIssue;
+import com.d5wq.burger.coupon.repository.CouponIssueRepository;
+import com.d5wq.burger.coupon.repository.CouponRepository;
 import com.d5wq.burger.order.dto.OrderCreateRequest;
 import com.d5wq.burger.order.dto.OrderCreateRequest.Line;
 import com.d5wq.burger.order.dto.OrderCreateRequest.OptionSelection;
@@ -17,6 +22,7 @@ import com.d5wq.burger.product.repository.OptionGroupRepository;
 import com.d5wq.burger.product.repository.ProductRepository;
 import com.d5wq.burger.user.entity.User;
 import com.d5wq.burger.user.repository.UserRepository;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +40,8 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final OptionGroupRepository optionGroupRepository;
     private final UserRepository userRepository;
+    private final CouponRepository couponRepository;
+    private final CouponIssueRepository couponIssueRepository;
 
     @Transactional
     public OrderResponse createOrder(Long userId, OrderCreateRequest request) {
@@ -53,7 +61,55 @@ public class OrderService {
                 .toList();
 
         Order order = Order.create(user, items);
+
+        // 쿠폰이 지정되면 할인을 적용하고, 그 발급내역을 사용 처리한다.
+        if (request.couponId() != null) {
+            applyCoupon(order, userId, request.couponId());
+        }
+
         return OrderResponse.from(orderRepository.save(order));
+    }
+
+    /**
+     * 주문에 쿠폰을 적용한다.
+     * <ul>
+     *   <li>보유(발급) 여부 확인 — 내 쿠폰이 아니면 거절.</li>
+     *   <li>기간 확인 — 발급/사용 가능 기간이 아니면 거절.</li>
+     *   <li>범위별 할인 기준액: ORDER 는 주문 전체, PRODUCT 는 대상 상품 라인 합계.</li>
+     *   <li>PRODUCT 인데 대상 상품이 주문에 없으면 거절.</li>
+     *   <li>중복 사용 방지: 발급내역을 used 로 마킹(이미 사용됐으면 예외).</li>
+     * </ul>
+     */
+    private void applyCoupon(Order order, Long userId, Long couponId) {
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_FOUND));
+
+        CouponIssue issue = couponIssueRepository.findByCouponIdAndUserId(couponId, userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COUPON_NOT_ISSUED));
+
+        if (!coupon.isOpen(LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.COUPON_EXPIRED);
+        }
+
+        int base = discountBase(order, coupon);
+        if (base <= 0) {
+            // PRODUCT 쿠폰인데 대상 상품이 주문에 없는 경우.
+            throw new BusinessException(ErrorCode.COUPON_NOT_APPLICABLE);
+        }
+
+        issue.use(); // 이미 사용됐으면 여기서 예외 → 중복 사용 차단
+        order.applyDiscount(coupon.discountAmountFor(base));
+    }
+
+    /** 할인 기준액: ORDER=주문 합계, PRODUCT=대상 상품 라인들의 합계. */
+    private int discountBase(Order order, Coupon coupon) {
+        if (coupon.getApplyScope() == ApplyScope.ORDER) {
+            return order.getTotalPrice();
+        }
+        return order.getOrderItems().stream()
+                .filter(item -> item.getProduct().getId().equals(coupon.getProductId()))
+                .mapToInt(OrderItem::lineTotal)
+                .sum();
     }
 
     /** 한 주문 라인을 만들면서 선택 옵션을 검증하고, 가격/이름을 서버 값으로 스냅샷한다. */

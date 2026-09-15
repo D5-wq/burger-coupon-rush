@@ -37,7 +37,10 @@ public enum ErrorCode {
     COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "COUPON_404", "쿠폰을 찾을 수 없습니다."),
     COUPON_SOLD_OUT(HttpStatus.CONFLICT, "COUPON_409_SOLD_OUT", "쿠폰이 모두 소진되었습니다."),
     COUPON_ALREADY_ISSUED(HttpStatus.CONFLICT, "COUPON_409_DUP", "이미 발급받은 쿠폰입니다."),
-    COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "COUPON_400_EXPIRED", "쿠폰 발급 기간이 아닙니다.");
+    COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "COUPON_400_EXPIRED", "쿠폰 발급 기간이 아닙니다."),
+    COUPON_NOT_ISSUED(HttpStatus.BAD_REQUEST, "COUPON_400_NOT_ISSUED", "보유하지 않은 쿠폰입니다."),
+    COUPON_ALREADY_USED(HttpStatus.CONFLICT, "COUPON_409_USED", "이미 사용한 쿠폰입니다."),
+    COUPON_NOT_APPLICABLE(HttpStatus.BAD_REQUEST, "COUPON_400_NOT_APPLICABLE", "이 주문에 적용할 수 없는 쿠폰입니다.");
 
     private final HttpStatus status;
     private final String code;
