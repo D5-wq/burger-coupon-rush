@@ -32,6 +32,7 @@ export default function Layout() {
 
           <nav className="flex items-center gap-0.5 whitespace-nowrap text-sm font-semibold">
             <TopLink to="/">메뉴</TopLink>
+            <TopLink to="/coupons">쿠폰</TopLink>
             {isAuthenticated && <TopLink to="/orders">주문</TopLink>}
             <Link
               to="/cart"

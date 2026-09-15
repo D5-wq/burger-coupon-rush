@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../store/cart';
 import { useAuth } from '../store/auth';
 import { orderApi } from '../api/order';
-import { ApiError, OrderCreateRequest } from '../types';
+import { couponApi } from '../api/coupon';
+import { ApiError, MyCoupon, OrderCreateRequest } from '../types';
 import { formatWon } from '../lib/format';
 import ProductImage from '../components/ProductImage';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
+import { cn } from '../lib/cn';
 
 export default function CartPage() {
   const cart = useCart();
@@ -18,6 +20,42 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null);
   const [loginPrompt, setLoginPrompt] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState<number | null>(null);
+
+  const [coupons, setCoupons] = useState<MyCoupon[]>([]);
+  const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
+
+  // 로그인 상태에서 사용 가능한 내 쿠폰을 불러온다.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    couponApi
+      .myCoupons()
+      .then((list) => setCoupons(list.filter((c) => !c.used)))
+      .catch(() => setCoupons([]));
+  }, [isAuthenticated]);
+
+  // 이 장바구니에 적용 가능한 쿠폰만 (ORDER 전체 / PRODUCT 는 해당 상품이 담겨야).
+  const applicable = useMemo(() => {
+    const productIds = new Set(cart.lines.map((l) => l.productId));
+    return coupons.filter(
+      (c) => c.applyScope === 'ORDER' || (c.productId != null && productIds.has(c.productId)),
+    );
+  }, [coupons, cart.lines]);
+
+  const selectedCoupon = applicable.find((c) => c.couponId === selectedCouponId) ?? null;
+
+  // 클라이언트 예상 할인(확정 금액은 서버 응답 기준).
+  const estimatedDiscount = useMemo(() => {
+    if (!selectedCoupon) return 0;
+    const base =
+      selectedCoupon.applyScope === 'ORDER'
+        ? cart.total
+        : cart.lines
+            .filter((l) => l.productId === selectedCoupon.productId)
+            .reduce((s, l) => s + l.lineTotal, 0);
+    return Math.floor((base * selectedCoupon.discountRate) / 100);
+  }, [selectedCoupon, cart.lines, cart.total]);
+
+  const payable = cart.total - estimatedDiscount;
 
   const placeOrder = async () => {
     if (!isAuthenticated) {
@@ -36,6 +74,7 @@ export default function CartPage() {
             quantity: o.quantity,
           })),
         })),
+        couponId: selectedCouponId ?? undefined,
       };
       const order = await orderApi.create(body);
       cart.clear();
@@ -127,11 +166,43 @@ export default function CartPage() {
         </div>
       ))}
 
-      {/* 합계 */}
-      <div className="card p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold">합계 ({cart.count}개)</span>
-          <span className="text-lg font-extrabold text-brand">{formatWon(cart.total)}</span>
+      {/* 쿠폰 선택 */}
+      {isAuthenticated && (
+        <div className="card p-4">
+          <label className="mb-2 block text-sm font-bold">쿠폰</label>
+          {applicable.length === 0 ? (
+            <p className="text-[13px] text-ink-faint">
+              적용 가능한 쿠폰이 없어요.{' '}
+              <Link to="/coupons" className="font-semibold text-brand">
+                쿠폰 받으러 가기
+              </Link>
+            </p>
+          ) : (
+            <select
+              value={selectedCouponId ?? ''}
+              onChange={(e) => setSelectedCouponId(e.target.value ? Number(e.target.value) : null)}
+              className="input"
+            >
+              <option value="">쿠폰 사용 안 함</option>
+              {applicable.map((c) => (
+                <option key={c.couponId} value={c.couponId}>
+                  [{c.discountRate}%] {c.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
+      {/* 금액 요약 */}
+      <div className="card space-y-1.5 p-4">
+        <Row label={`합계 (${cart.count}개)`} value={formatWon(cart.total)} />
+        {estimatedDiscount > 0 && (
+          <Row label="쿠폰 할인" value={`- ${formatWon(estimatedDiscount)}`} accent />
+        )}
+        <div className="mt-1.5 flex items-center justify-between border-t border-black/5 pt-2.5">
+          <span className="text-sm font-bold">결제 예정 금액</span>
+          <span className="text-lg font-extrabold text-brand">{formatWon(payable)}</span>
         </div>
       </div>
 
@@ -145,7 +216,7 @@ export default function CartPage() {
           <span className="text-sm font-semibold">
             {submitting ? '주문 중…' : '주문하기'}
           </span>
-          <span className="text-base font-extrabold">{formatWon(cart.total)}</span>
+          <span className="text-base font-extrabold">{formatWon(payable)}</span>
         </button>
       </div>
 
@@ -177,6 +248,17 @@ export default function CartPage() {
           </div>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-ink-soft">{label}</span>
+      <span className={cn('tabular-nums', accent ? 'font-semibold text-brand' : 'text-ink')}>
+        {value}
+      </span>
     </div>
   );
 }

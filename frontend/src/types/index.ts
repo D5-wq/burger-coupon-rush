@@ -93,6 +93,8 @@ export interface OrderCreateRequest {
     quantity: number;
     options?: Array<{ optionItemId: number; quantity: number }>;
   }>;
+  /** 적용할 쿠폰 id(선택). 보유(발급)한 쿠폰이어야 한다. */
+  couponId?: number;
 }
 
 // ── 장바구니 (프론트 전용, 서버에 없음) ─────────────────────────────
@@ -119,6 +121,38 @@ export interface CartLine {
   /** 줄 합계 = unitTotal × quantity. */
   lineTotal: number;
 }
+
+// ── 쿠폰 ────────────────────────────────────────────────────────────
+export type ApplyScope = 'ORDER' | 'PRODUCT';
+
+/** 발급 가능한 쿠폰 목록 항목. */
+export interface CouponSummary {
+  couponId: number;
+  name: string;
+  discountRate: number;
+  applyScope: ApplyScope;
+  productId: number | null;
+  productName: string | null;
+  totalQuantity: number;
+  stock: number;
+  soldOut: boolean;
+  open: boolean;
+}
+
+/** 내 쿠폰함 항목. */
+export interface MyCoupon {
+  couponId: number;
+  name: string;
+  discountRate: number;
+  applyScope: ApplyScope;
+  productId: number | null;
+  productName: string | null;
+  used: boolean;
+  issuedAt: string;
+}
+
+/** 쿠폰 발급 전략(동시성 제어 방식). */
+export type IssueStrategy = 'naive' | 'pessimistic' | 'redis';
 
 /** API 호출 실패 시 던지는 에러(백엔드 ErrorCode 를 보존). */
 export class ApiError extends Error {
