@@ -3,8 +3,11 @@
 import {
   ApiError,
   Order,
+  OptionGroup,
   OrderCreateRequest,
+  OrderItemOption,
   Product,
+  ProductDetail,
   TokenResponse,
   UserResponse,
 } from '../types';
@@ -73,6 +76,78 @@ const PRODUCTS: Product[] = [
   },
 ];
 
+// 데모 모드에서 모든 상품이 공유하는 옵션 템플릿(백엔드 시드 구조와 동일한 형태).
+const OPTION_GROUPS: OptionGroup[] = [
+  {
+    id: 1,
+    name: '구성',
+    selectionType: 'SINGLE',
+    required: true,
+    minSelect: 1,
+    maxSelect: 1,
+    displayOrder: 0,
+    items: [
+      { id: 1, name: '단품', extraPrice: 0, defaultQuantity: 0, maxQuantity: 1, displayOrder: 0 },
+      { id: 2, name: '세트 (사이드+음료)', extraPrice: 2500, defaultQuantity: 0, maxQuantity: 1, displayOrder: 1 },
+    ],
+  },
+  {
+    id: 2,
+    name: '재료 추가·제거',
+    selectionType: 'MULTI',
+    required: false,
+    minSelect: 0,
+    maxSelect: 10,
+    displayOrder: 1,
+    items: [
+      { id: 3, name: '양파', extraPrice: 0, defaultQuantity: 1, maxQuantity: 2, displayOrder: 0 },
+      { id: 4, name: '양상추', extraPrice: 0, defaultQuantity: 1, maxQuantity: 2, displayOrder: 1 },
+      { id: 5, name: '토마토', extraPrice: 0, defaultQuantity: 1, maxQuantity: 2, displayOrder: 2 },
+      { id: 6, name: '피클', extraPrice: 0, defaultQuantity: 1, maxQuantity: 3, displayOrder: 3 },
+      { id: 7, name: '패티 추가', extraPrice: 1500, defaultQuantity: 0, maxQuantity: 2, displayOrder: 4 },
+      { id: 8, name: '치즈 추가', extraPrice: 1000, defaultQuantity: 0, maxQuantity: 2, displayOrder: 5 },
+    ],
+  },
+  {
+    id: 3,
+    name: '사이드 변경 (세트)',
+    selectionType: 'SINGLE',
+    required: false,
+    minSelect: 0,
+    maxSelect: 1,
+    displayOrder: 2,
+    items: [
+      { id: 9, name: '감자튀김', extraPrice: 0, defaultQuantity: 0, maxQuantity: 1, displayOrder: 0 },
+      { id: 10, name: '치즈스틱', extraPrice: 500, defaultQuantity: 0, maxQuantity: 1, displayOrder: 1 },
+      { id: 11, name: '양념감자', extraPrice: 800, defaultQuantity: 0, maxQuantity: 1, displayOrder: 2 },
+      { id: 12, name: '어니언링', extraPrice: 800, defaultQuantity: 0, maxQuantity: 1, displayOrder: 3 },
+    ],
+  },
+  {
+    id: 4,
+    name: '음료 (세트)',
+    selectionType: 'SINGLE',
+    required: false,
+    minSelect: 0,
+    maxSelect: 1,
+    displayOrder: 3,
+    items: [
+      { id: 13, name: '코카콜라 R', extraPrice: 0, defaultQuantity: 0, maxQuantity: 1, displayOrder: 0 },
+      { id: 14, name: '코카콜라 L', extraPrice: 500, defaultQuantity: 0, maxQuantity: 1, displayOrder: 1 },
+      { id: 15, name: '제로콜라 R', extraPrice: 0, defaultQuantity: 0, maxQuantity: 1, displayOrder: 2 },
+      { id: 16, name: '스프라이트 R', extraPrice: 0, defaultQuantity: 0, maxQuantity: 1, displayOrder: 3 },
+    ],
+  },
+];
+
+// optionItemId → 소속 그룹명/항목 정보. createOrder 에서 스냅샷 계산에 쓴다.
+const OPTION_ITEM_INDEX = new Map<number, { groupName: string; itemName: string; extraPrice: number }>();
+for (const g of OPTION_GROUPS) {
+  for (const it of g.items) {
+    OPTION_ITEM_INDEX.set(it.id, { groupName: g.name, itemName: it.name, extraPrice: it.extraPrice });
+  }
+}
+
 function loadUser(): UserResponse | null {
   try {
     const raw = localStorage.getItem(USER_KEY);
@@ -97,11 +172,11 @@ export const mockApi = {
     return PRODUCTS;
   },
 
-  async product(id: number): Promise<Product> {
+  async product(id: number): Promise<ProductDetail> {
     await delay(150);
     const p = PRODUCTS.find((x) => x.id === id);
     if (!p) throw new ApiError('PRODUCT_404', '상품을 찾을 수 없습니다.', 404);
-    return p;
+    return { ...p, optionGroups: OPTION_GROUPS };
   },
 
   async signUp(body: { email: string; name: string }): Promise<UserResponse> {
@@ -132,12 +207,23 @@ export const mockApi = {
     await delay();
     const items = body.items.map((line) => {
       const p = PRODUCTS.find((x) => x.id === line.productId)!;
+      const options: OrderItemOption[] = (line.options ?? []).map((o) => {
+        const meta = OPTION_ITEM_INDEX.get(o.optionItemId);
+        return {
+          groupName: meta?.groupName ?? '옵션',
+          itemName: meta?.itemName ?? `#${o.optionItemId}`,
+          extraPrice: meta?.extraPrice ?? 0,
+          quantity: o.quantity,
+        };
+      });
+      const extra = options.reduce((s, o) => s + o.extraPrice * o.quantity, 0);
       return {
         productId: p.id,
         productName: p.name,
         unitPrice: p.price,
         quantity: line.quantity,
-        lineTotal: p.price * line.quantity,
+        lineTotal: (p.price + extra) * line.quantity,
+        options,
       };
     });
     const totalPrice = items.reduce((s, it) => s + it.lineTotal, 0);

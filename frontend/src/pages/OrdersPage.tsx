@@ -58,13 +58,26 @@ export default function OrdersPage() {
             </span>
           </div>
 
-          <ul className="mt-3 space-y-1">
-            {order.items.map((it) => (
-              <li key={it.productId} className="flex justify-between text-sm">
-                <span className="text-ink-soft">
-                  {it.productName} <span className="text-ink-faint">×{it.quantity}</span>
-                </span>
-                <span className="tabular-nums">{formatWon(it.lineTotal)}</span>
+          <ul className="mt-3 space-y-2">
+            {order.items.map((it, idx) => (
+              <li key={`${order.id}-${it.productId}-${idx}`} className="text-sm">
+                <div className="flex justify-between">
+                  <span className="text-ink-soft">
+                    {it.productName} <span className="text-ink-faint">×{it.quantity}</span>
+                  </span>
+                  <span className="tabular-nums">{formatWon(it.lineTotal)}</span>
+                </div>
+                {it.options.length > 0 && (
+                  <ul className="mt-0.5 space-y-0.5 pl-1">
+                    {it.options.map((o, oi) => (
+                      <li key={oi} className="text-[12px] text-ink-faint">
+                        · {o.groupName}: {o.itemName}
+                        {o.quantity > 1 && ` ×${o.quantity}`}
+                        {o.extraPrice > 0 && ` (+${formatWon(o.extraPrice * o.quantity)})`}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>
