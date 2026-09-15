@@ -7,7 +7,14 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record OrderCreateRequest(
-        @NotEmpty @Valid List<Line> items) {
+        @NotEmpty @Valid List<Line> items,
+        /** 주문에 적용할 쿠폰 id(선택). 보유(발급)한 쿠폰이어야 한다. */
+        Long couponId) {
+
+    /** 쿠폰 없이 주문할 때의 편의 생성자. */
+    public OrderCreateRequest(List<Line> items) {
+        this(items, null);
+    }
 
     public record Line(
             @NotNull Long productId,

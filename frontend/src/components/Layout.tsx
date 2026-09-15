@@ -1,10 +1,12 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
+import { useCart } from '../store/cart';
 import { cn } from '../lib/cn';
 import { IS_DEMO } from '../lib/env';
 
 export default function Layout() {
   const { isAuthenticated, user, logout } = useAuth();
+  const { count } = useCart();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -28,13 +30,26 @@ export default function Layout() {
             )}
           </Link>
 
-          <nav className="flex items-center gap-1 text-sm font-semibold">
+          <nav className="flex items-center gap-0.5 whitespace-nowrap text-sm font-semibold">
             <TopLink to="/">메뉴</TopLink>
-            {isAuthenticated && <TopLink to="/orders">내 주문</TopLink>}
+            <TopLink to="/coupons">쿠폰</TopLink>
+            {isAuthenticated && <TopLink to="/orders">주문</TopLink>}
+            <Link
+              to="/cart"
+              aria-label="장바구니"
+              className="relative rounded-lg px-2 py-1.5 text-ink-soft transition hover:bg-black/[0.04]"
+            >
+              🛒
+              {count > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white">
+                  {count}
+                </span>
+              )}
+            </Link>
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
-                className="ml-1 rounded-lg px-3 py-1.5 text-ink-soft transition hover:bg-black/[0.04]"
+                className="rounded-lg px-2.5 py-1.5 text-ink-soft transition hover:bg-black/[0.04]"
                 title={user?.name}
               >
                 로그아웃
@@ -42,7 +57,7 @@ export default function Layout() {
             ) : (
               <Link
                 to="/login"
-                className="ml-1 rounded-lg bg-brand px-3.5 py-1.5 text-white transition hover:bg-brand-600"
+                className="rounded-lg bg-brand px-3 py-1.5 text-white transition hover:bg-brand-600"
               >
                 로그인
               </Link>
@@ -65,7 +80,7 @@ function TopLink({ to, children }: { to: string; children: React.ReactNode }) {
       end
       className={({ isActive }) =>
         cn(
-          'rounded-lg px-3 py-1.5 transition',
+          'rounded-lg px-2.5 py-1.5 transition',
           isActive ? 'text-brand' : 'text-ink-soft hover:bg-black/[0.04]',
         )
       }

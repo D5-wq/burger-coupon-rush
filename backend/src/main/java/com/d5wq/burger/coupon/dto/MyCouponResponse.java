@@ -10,7 +10,9 @@ public record MyCouponResponse(
         String name,
         int discountRate,
         String applyScope,      // ORDER | PRODUCT
+        Long productId,         // PRODUCT 범위일 때 대상 상품 (주문 적용 가능 여부 판단용)
         String productName,     // 대상 상품 이름 (ORDER면 null)
+        boolean used,           // 주문에 이미 사용했는지
         LocalDateTime issuedAt) {
 
     public static MyCouponResponse of(CouponIssue issue, Coupon coupon, String productName) {
@@ -19,7 +21,9 @@ public record MyCouponResponse(
                 coupon.getName(),
                 coupon.getDiscountRate(),
                 coupon.getApplyScope().name(),
+                coupon.getProductId(),
                 productName,
+                issue.isUsed(),
                 issue.getCreatedAt());
     }
 }

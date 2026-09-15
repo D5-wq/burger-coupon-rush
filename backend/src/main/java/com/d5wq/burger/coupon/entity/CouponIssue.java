@@ -1,6 +1,8 @@
 package com.d5wq.burger.coupon.entity;
 
 import com.d5wq.burger.common.entity.BaseTimeEntity;
+import com.d5wq.burger.common.exception.BusinessException;
+import com.d5wq.burger.common.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -37,12 +39,25 @@ public class CouponIssue extends BaseTimeEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    /** 주문에 사용됐는지 여부. 한 번 사용하면 재사용 불가(중복 사용 방지). */
+    @Column(nullable = false)
+    private boolean used;
+
     private CouponIssue(Long couponId, Long userId) {
         this.couponId = couponId;
         this.userId = userId;
+        this.used = false;
     }
 
     public static CouponIssue of(Long couponId, Long userId) {
         return new CouponIssue(couponId, userId);
+    }
+
+    /** 주문에 사용 처리. 이미 사용됐으면 예외로 중복 사용을 막는다. */
+    public void use() {
+        if (this.used) {
+            throw new BusinessException(ErrorCode.COUPON_ALREADY_USED);
+        }
+        this.used = true;
     }
 }
