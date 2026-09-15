@@ -15,6 +15,7 @@ import com.d5wq.burger.product.entity.Product;
 import com.d5wq.burger.product.repository.ProductRepository;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -113,8 +114,10 @@ public class CouponIssueService {
     }
 
     private Map<Long, String> productNamesFor(List<Long> productIds) {
+        // HashMap 을 쓰는 이유: ORDER 범위 쿠폰은 productId 가 null 이라 get(null) 로 조회하는데,
+        // Map.of()(불변 맵)는 null 키 조회에서 NPE 를 던진다. HashMap 은 null 조회 시 null 을 반환한다.
         if (productIds.isEmpty()) {
-            return Map.of();
+            return new HashMap<>();
         }
         return productRepository.findAllById(productIds).stream()
                 .collect(Collectors.toMap(Product::getId, Product::getName));
