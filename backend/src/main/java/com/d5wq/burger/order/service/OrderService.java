@@ -97,7 +97,11 @@ public class OrderService {
             throw new BusinessException(ErrorCode.COUPON_NOT_APPLICABLE);
         }
 
-        issue.use(); // 이미 사용됐으면 여기서 예외 → 중복 사용 차단
+        // 원자적 사용 처리: 동시에 같은 쿠폰으로 여러 주문이 들어와도 한 번만 성공한다.
+        // 0이면 이미 사용됐거나 다른 트랜잭션이 선점한 것 → 중복 사용 차단.
+        if (couponIssueRepository.markUsedIfUnused(issue.getId()) == 0) {
+            throw new BusinessException(ErrorCode.COUPON_ALREADY_USED);
+        }
         order.applyDiscount(coupon.discountAmountFor(base));
     }
 
