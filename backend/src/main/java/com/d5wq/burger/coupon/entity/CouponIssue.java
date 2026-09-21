@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
@@ -23,7 +24,9 @@ import lombok.NoArgsConstructor;
         name = "coupon_issues",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_coupon_user",
-                columnNames = {"coupon_id", "user_id"}))
+                columnNames = {"coupon_id", "user_id"}),
+        // 내 쿠폰함 조회(findByUserIdOrderByIdDesc)를 위한 user_id 인덱스.
+        indexes = @Index(name = "idx_coupon_issue_user", columnList = "user_id"))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CouponIssue extends BaseTimeEntity {
 

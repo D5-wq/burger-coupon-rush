@@ -2,6 +2,7 @@ package com.d5wq.burger.common.exception;
 
 import com.d5wq.burger.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,6 +31,19 @@ public class GlobalExceptionHandler {
                 .orElse(ErrorCode.INVALID_INPUT.getMessage());
         return ResponseEntity.status(ErrorCode.INVALID_INPUT.getStatus())
                 .body(ApiResponse.error(ErrorCode.INVALID_INPUT.getCode(), message));
+    }
+
+    /**
+     * DB 제약 위반(예: coupon_issues 의 (coupon_id,user_id) 유니크). 극한 동시성에서
+     * 애플리케이션 체크를 통과한 요청이 마지막에 DB 제약에 걸리는 경우로, 500이 아니라
+     * 409(충돌)로 내려 클라이언트가 "중복/경합"임을 알 수 있게 한다.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException e) {
+        ErrorCode code = ErrorCode.CONFLICT;
+        log.warn("DataIntegrityViolation: {}", e.getMostSpecificCause().getMessage());
+        return ResponseEntity.status(code.getStatus())
+                .body(ApiResponse.error(code.getCode(), code.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
