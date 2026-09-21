@@ -1,13 +1,12 @@
 package com.d5wq.burger.coupon.entity;
 
 import com.d5wq.burger.common.entity.BaseTimeEntity;
-import com.d5wq.burger.common.exception.BusinessException;
-import com.d5wq.burger.common.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
@@ -25,7 +24,9 @@ import lombok.NoArgsConstructor;
         name = "coupon_issues",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_coupon_user",
-                columnNames = {"coupon_id", "user_id"}))
+                columnNames = {"coupon_id", "user_id"}),
+        // 내 쿠폰함 조회(findByUserIdOrderByIdDesc)를 위한 user_id 인덱스.
+        indexes = @Index(name = "idx_coupon_issue_user", columnList = "user_id"))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CouponIssue extends BaseTimeEntity {
 
@@ -51,13 +52,5 @@ public class CouponIssue extends BaseTimeEntity {
 
     public static CouponIssue of(Long couponId, Long userId) {
         return new CouponIssue(couponId, userId);
-    }
-
-    /** 주문에 사용 처리. 이미 사용됐으면 예외로 중복 사용을 막는다. */
-    public void use() {
-        if (this.used) {
-            throw new BusinessException(ErrorCode.COUPON_ALREADY_USED);
-        }
-        this.used = true;
     }
 }

@@ -22,6 +22,10 @@ import com.d5wq.burger.user.dto.SignUpRequest;
 import com.d5wq.burger.user.dto.UserResponse;
 import com.d5wq.burger.user.service.AuthService;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -131,6 +135,55 @@ class OrderCouponTest {
                 () -> orderService.createOrder(user.id(),
                         new OrderCreateRequest(List.of(danpumLine(ordered, 1)), couponId)),
                 ErrorCode.COUPON_NOT_APPLICABLE);
+    }
+
+    @Test
+    @DisplayName("같은 쿠폰으로 동시에 여러 주문이 들어와도 할인은 정확히 한 번만 적용된다")
+    void concurrentOrders_useCouponOnlyOnce() throws InterruptedException {
+        UserResponse user = signUp("coupon-race@test.com");
+        ProductResponse product = productAt(0);
+        Long couponId = couponIssueService.createCoupon(
+                new CouponCreateRequest("전체 10%", 10, ApplyScope.ORDER, null, 100, null, null));
+        couponIssueService.issue(couponId, user.id(), IssueStrategy.NAIVE);
+
+        int attempts = 20;
+        ExecutorService pool = Executors.newFixedThreadPool(20);
+        CountDownLatch startGate = new CountDownLatch(1);
+        CountDownLatch done = new CountDownLatch(attempts);
+        AtomicInteger discounted = new AtomicInteger();
+        AtomicInteger alreadyUsed = new AtomicInteger();
+        AtomicInteger other = new AtomicInteger();
+
+        for (int i = 0; i < attempts; i++) {
+            pool.submit(() -> {
+                try {
+                    startGate.await();
+                    OrderResponse res = orderService.createOrder(user.id(),
+                            new OrderCreateRequest(List.of(danpumLine(product, 1)), couponId));
+                    if (res.discountAmount() > 0) {
+                        discounted.incrementAndGet();
+                    }
+                } catch (BusinessException e) {
+                    if (e.getErrorCode() == ErrorCode.COUPON_ALREADY_USED) {
+                        alreadyUsed.incrementAndGet();
+                    } else {
+                        other.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    other.incrementAndGet();
+                } finally {
+                    done.countDown();
+                }
+            });
+        }
+        startGate.countDown();
+        done.await();
+        pool.shutdown();
+
+        // 정확히 한 번만 할인 적용, 나머지는 이미 사용됨으로 거절.
+        assertThat(discounted.get()).isEqualTo(1);
+        assertThat(alreadyUsed.get()).isEqualTo(attempts - 1);
+        assertThat(other.get()).isZero();
     }
 
     // --- helpers ---
